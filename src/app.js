@@ -3,12 +3,13 @@ const SUPABASE_URL = 'https://kxixtofcjlnonwpxoaou.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_gmt6yKnlfHkTGxnTZpUJfg_2EM-jKs1';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4aXh0b2Zjamxub253cHhvYW91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0OTM5OTksImV4cCI6MjEwNjA2OTk5OX0.-x-2fMWzN6THRbKHDmWyW1XtcTEWAEv4LtxEris2_H8';
 const AI_ANALYZE_URL = `${SUPABASE_URL}/functions/v1/meme-analyze`;
+const MEME_IMPORT_URL = `${SUPABASE_URL}/functions/v1/meme-import`;
 
 const els = Object.fromEntries([
   'zip-input','dropzone','file-note','processing','progress-bar','progress-text',
   'workspace','thumbnails','image-count','position','current-status','image-stage',
   'previous','next','meme-form','mark-reviewed','reanalyze','retry-failed',
-  'analyze-all','form-note','thumbnail-template'
+  'analyze-all','upload-reviewed','form-note','thumbnail-template'
 ].map((id) => [id, document.getElementById(id)]));
 
 class LocalMemeRepository {
@@ -93,7 +94,7 @@ function defaultMeme(id, image) {
   return {
     id, image, name: '', description: '', tags: '', emotion: '',
     scenes: '', tone: '', intensity: '', speech_acts: '', aliases: '',
-    status: 'pending', aiAnalyzed: false
+    status: 'pending', aiAnalyzed: false, synced: false
   };
 }
 
@@ -273,6 +274,77 @@ async function analyzeAll() {
   render();
 }
 
+async function uploadReviewed() {
+  readForm();
+  persist();
+
+  const targets = state.memes.filter((meme) => meme.status === 'reviewed' && !meme.synced);
+  if (!targets.length) {
+    els['form-note'].textContent = '没有新的“已审核”表情包需要上传。';
+    return;
+  }
+
+  els['upload-reviewed'].disabled = true;
+  els['form-note'].textContent = `正在把 ${targets.length} 张已审核表情包送进 Supabase……`;
+
+  try {
+    const items = [];
+    for (const meme of targets) {
+      const image = await imageUrlToDataUrl(meme.image);
+      items.push({
+        id: meme.id,
+        filename: meme.id.split(':').slice(1).join(':') || meme.name,
+        image,
+        name: meme.name,
+        description: meme.description,
+        tags: meme.tags,
+        emotion: meme.emotion,
+        scenes: meme.scenes,
+        tone: meme.tone,
+        intensity: meme.intensity,
+        speech_acts: meme.speech_acts,
+        aliases: meme.aliases,
+        status: meme.status,
+        aiAnalyzed: meme.aiAnalyzed === true,
+      });
+    }
+
+    const response = await fetch(MEME_IMPORT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_PUBLISHABLE_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ items }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || `上传失败：HTTP ${response.status}`);
+
+    const failed = new Map((payload.failed || []).map((item) => [item.id, item.error]));
+    targets.forEach((meme) => {
+      if (!failed.has(meme.id)) {
+        meme.synced = true;
+        meme.aiError = '';
+      } else {
+        meme.aiError = `入库失败：${failed.get(meme.id)}`;
+      }
+    });
+
+    persist();
+    const successCount = targets.length - failed.size;
+    els['form-note'].textContent = failed.size
+      ? `已入库 ${successCount} 张，还有 ${failed.size} 张失败，可修正后再次上传。`
+      : `已成功送达 Supabase：${successCount} 张。🎉`;
+    render();
+  } catch (error) {
+    els['form-note'].textContent = error.message || '上传失败。';
+  } finally {
+    els['upload-reviewed'].disabled = false;
+  }
+}
+
 async function retryFailed() {
   const targets = state.memes.filter((meme) => state.failedAnalysis.has(meme.id) || meme.aiError);
   if (!targets.length) {
@@ -379,3 +451,4 @@ els['mark-reviewed'].addEventListener('click', () => {
 els.reanalyze.addEventListener('click', analyzeCurrent);
 els['analyze-all'].addEventListener('click', analyzeAll);
 els['retry-failed'].addEventListener('click', retryFailed);
+els['upload-reviewed'].addEventListener('click', uploadReviewed);

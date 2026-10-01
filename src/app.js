@@ -162,6 +162,7 @@ function arrayToText(value) {
 }
 
 async function imageUrlToDataUrl(url) {
+  if (typeof url === 'string' && url.startsWith('data:')) return url;
   const response = await fetch(url);
   if (!response.ok) throw new Error('无法读取当前图片。');
   const blob = await response.blob();
@@ -170,6 +171,15 @@ async function imageUrlToDataUrl(url) {
     reader.onload = () => resolve(reader.result);
     reader.onerror = () => reject(new Error('图片读取失败。'));
     reader.readAsDataURL(blob);
+  });
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('图片读取失败。'));
+    reader.readAsDataURL(file);
   });
 }
 
@@ -390,8 +400,9 @@ async function importDirectImages(fileList) {
 
   for (const [index, file] of files.entries()) {
     const id = `direct:${file.name}:${file.lastModified}:${file.size}:${Date.now()}:${index}`;
+    const image = await fileToDataUrl(file);
     imported.push({
-      ...defaultMeme(id, URL.createObjectURL(file)),
+      ...defaultMeme(id, image),
       ...(saved[id] || {})
     });
   }

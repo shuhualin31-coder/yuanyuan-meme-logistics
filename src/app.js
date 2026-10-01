@@ -466,6 +466,7 @@ els['direct-input'].addEventListener('change', (event) => {
   importDirectImages(event.target.files);
   event.target.value = '';
 });
+els['direct-dropzone'].addEventListener('click', () => els['direct-input'].click());
 ['dragenter', 'dragover'].forEach((eventName) =>
   els.dropzone.addEventListener(eventName, (event) => {
     event.preventDefault();

@@ -209,23 +209,45 @@ function applyAiResult(meme, result) {
 }
 
 async function analyzeMeme(meme) {
-  const image = await imageUrlToDataUrl(meme.image);
-  const response = await fetch(AI_ANALYZE_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: SUPABASE_PUBLISHABLE_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify({ image }),
-  });
+  let image;
+  try {
+    image = await imageUrlToDataUrl(meme.image);
+  } catch (error) {
+    throw new Error(`图片读取失败：${error.message}`);
+  }
 
-  const payload = await response.json().catch(() => ({}));
+  let response;
+  try {
+    response = await fetch(AI_ANALYZE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_PUBLISHABLE_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ image }),
+    });
+  } catch (error) {
+    throw new Error(`AI请求未发出：${error?.message || String(error)}`);
+  }
+
+  const rawText = await response.text();
+  let payload = {};
+  try {
+    payload = rawText ? JSON.parse(rawText) : {};
+  } catch {
+    throw new Error(`AI服务返回了无法解析的内容（HTTP ${response.status}）：${rawText.slice(0, 240)}`);
+  }
+
   if (!response.ok) {
+    const upstream = payload.upstream_error ? `；Gemini：${payload.upstream_error}` : '';
+    const status = payload.upstream_status ? `；上游HTTP：${payload.upstream_status}` : '';
     const code = payload.code || payload.error || `HTTP ${response.status}`;
-    throw new Error(code === 'OPENAI_API_KEY_MISSING'
-      ? 'AI服务还没有配置 API Key。'
-      : `AI分析失败：${code}`);
+    throw new Error(`AI分析失败（HTTP ${response.status}）：${code}${status}${upstream}`);
+  }
+
+  if (!payload.result) {
+    throw new Error(`AI服务没有返回分析结果（HTTP ${response.status}）`);
   }
 
   return payload.result;

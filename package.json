@@ -1,0 +1,9 @@
+{
+  "name": "yuanyuan-meme-logistics",
+  "version": "1.0.0",
+  "private": true,
+  "description": "缘缘表情包物流站第一阶段前端原型",
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  }
+}

@@ -21,14 +21,21 @@
 
       <section class="import-card" aria-labelledby="import-title">
         <div>
-          <h2 id="import-title">导入素材包</h2>
-          <p>支持 ZIP 文件，自动递归寻找 jpg、jpeg、png、webp 和 gif。</p>
+          <h2 id="import-title">导入素材</h2>
+          <p>ZIP 适合批量整理，也可以直接从手机相册或文件中添加图片。</p>
         </div>
-        <label class="dropzone" id="dropzone" for="zip-input">
-          <input id="zip-input" type="file" accept=".zip,application/zip" />
-          <strong>选择 ZIP 文件</strong>
-          <span>或将文件拖放到这里</span>
-        </label>
+        <div class="import-actions">
+          <label class="dropzone" id="dropzone" for="zip-input">
+            <input id="zip-input" type="file" accept=".zip,application/zip" />
+            <strong>📦 选择 ZIP 文件</strong>
+            <span>或将文件拖放到这里</span>
+          </label>
+          <label class="dropzone" id="direct-dropzone" for="direct-input">
+            <input id="direct-input" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" multiple />
+            <strong>🖼️ 直接添加图片</strong>
+            <span>支持 JPG / PNG 等，可一次多选</span>
+          </label>
+        </div>
         <p class="file-note" id="file-note">尚未选择文件</p>
         <div class="processing hidden" id="processing" aria-live="polite">
           <div class="progress-line"><i id="progress-bar"></i></div>

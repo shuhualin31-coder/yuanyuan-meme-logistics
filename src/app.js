@@ -373,6 +373,40 @@ async function retryFailed() {
   render();
 }
 
+async function importDirectImages(fileList) {
+  const files = Array.from(fileList || {}).filter((file) => {
+    if (!file) return false;
+    return IMAGE_PATTERN.test(file.name) || /^image\/(jpeg|png|webp|gif)$/i.test(file.type);
+  });
+
+  if (!files.length) {
+    els['file-note'].textContent = '请选择 JPG、JPEG、PNG、WEBP 或 GIF 图片。';
+    return;
+  }
+
+  const saved = repository.load();
+  const startCount = state.memes.length;
+  const imported = [];
+
+  for (const [index, file] of files.entries()) {
+    const id = `direct:${file.name}:${file.lastModified}:${file.size}:${Date.now()}:${index}`;
+    imported.push({
+      ...defaultMeme(id, URL.createObjectURL(file)),
+      ...(saved[id] || {})
+    });
+  }
+
+  state.memes.push(...imported);
+  state.current = startCount;
+  persist();
+  els['image-count'].textContent = `找到 ${state.memes.length} 张图片`;
+  els.workspace.classList.remove('hidden');
+  els.processing.classList.add('hidden');
+  els['file-note'].textContent = `已直接添加 ${imported.length} 张图片`;
+  els['form-note'].textContent = '图片已加入队列，可以开始 AI 分析。';
+  render();
+}
+
 async function importZip(file) {
   if (!file || !file.name.toLowerCase().endsWith('.zip')) {
     els['file-note'].textContent = '请选择 ZIP 文件。';
@@ -428,6 +462,10 @@ async function importZip(file) {
 }
 
 els['zip-input'].addEventListener('change', (event) => importZip(event.target.files[0]));
+els['direct-input'].addEventListener('change', (event) => {
+  importDirectImages(event.target.files);
+  event.target.value = '';
+});
 ['dragenter', 'dragover'].forEach((eventName) =>
   els.dropzone.addEventListener(eventName, (event) => {
     event.preventDefault();

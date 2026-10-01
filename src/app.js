@@ -6,7 +6,7 @@ const AI_ANALYZE_URL = `${SUPABASE_URL}/functions/v1/meme-analyze`;
 const MEME_IMPORT_URL = `${SUPABASE_URL}/functions/v1/meme-import`;
 
 const els = Object.fromEntries([
-  'zip-input','dropzone','direct-input','file-note','processing','progress-bar','progress-text',
+  'zip-input','dropzone','direct-dropzone','direct-input','file-note','processing','progress-bar','progress-text',
   'workspace','thumbnails','image-count','position','current-status','image-stage',
   'previous','next','meme-form','mark-reviewed','reanalyze','retry-failed',
   'analyze-all','upload-reviewed','form-note','thumbnail-template'

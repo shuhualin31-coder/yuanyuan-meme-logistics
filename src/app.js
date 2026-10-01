@@ -1,6 +1,7 @@
 const IMAGE_PATTERN = /\.(jpe?g|png|webp|gif)$/i;
 const SUPABASE_URL = 'https://kxixtofcjlnonwpxoaou.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_gmt6yKnlfHkTGxnTZpUJfg_2EM-jKs1';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4aXh0b2Zjamxub253cHhvYW91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0OTM5OTksImV4cCI6MjEwNjA2OTk5OX0.-x-2fMWzN6THRbKHDmWyW1XtcTEWAEv4LtxEris2_H8';
 const AI_ANALYZE_URL = `${SUPABASE_URL}/functions/v1/meme-analyze`;
 
 const els = Object.fromEntries([
@@ -203,7 +204,7 @@ async function analyzeMeme(meme) {
     headers: {
       'Content-Type': 'application/json',
       apikey: SUPABASE_PUBLISHABLE_KEY,
-      Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
     body: JSON.stringify({ image }),
   });

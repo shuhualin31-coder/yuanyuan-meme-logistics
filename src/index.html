@@ -45,8 +45,11 @@
             </div>
             <button class="text-button" id="retry-failed" type="button">重试失败项</button>
           </div>
-          <button class="button primary analyze-all" id="analyze-all" type="button">开始 AI 分析全部</button>
-          <p class="queue-note">AI只会填入空白资料，不会覆盖你已经手动修改的内容。</p>
+          <div class="queue-actions">
+            <button class="button primary analyze-all" id="analyze-all" type="button">开始 AI 分析全部</button>
+            <button class="button secondary" id="upload-reviewed" type="button">上传已审核到 Supabase</button>
+          </div>
+          <p class="queue-note">AI只会填入空白资料，不会覆盖你已经手动修改的内容。标记为“已审核”后，才会进入 Supabase 收货口。</p>
           <div class="thumbnails" id="thumbnails" aria-label="图片缩略图"></div>
         </aside>
 
